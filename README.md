@@ -6,7 +6,7 @@ This repository contains a set of Apache Airflow DAGs (Directed Acyclic Graphs) 
 ### Key Features:
 * **Modular ETL:** The pipeline is broken into `extract.py`, `transform.py`, and `load.py` for clarity and maintainability.
 * **Dockerized Environment:** The entire Airflow environment is set up using `docker-compose.yaml` for consistency across development and deployment.
-* **Data Source:** Processes data from the included `data/raw.csv`.
+* **Data Source:** Processes data from the included `data/raw_data.csv`.
 
 ## 🛠️ Technology Stack
 * **Orchestration:** Apache Airflow [3.1.2]
@@ -33,7 +33,7 @@ docker compose up airflow-init
 docker compose up -d
 ```
 ### AIRFLOW WEB UI
-* [airflow web ui](http://localhost:8080)
+* [AIRFLOW WEB UI](http://localhost:8080)
 * **Username:** `airflow`
 * **Password:** `airflow`
 
