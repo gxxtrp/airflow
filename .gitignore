@@ -1,0 +1,52 @@
+# Ignore everything by default
+
+# Allow directories so negated patterns can work
+!*/
+# Keep .gitignore itself
+!.gitignore
+
+# ignore the project egg-info directory (explicitly allowed)
+airflow_project.egg-info/
+
+# Python bytecode and caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# Logs (all directories named "logs")
+logs/
+**/logs/
+
+# Environment files
+.env
+.env.*
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Packaging and build artifacts
+*.egg
+*.egg-info/
+build/
+dist/
+pip-wheel-metadata/
+.eggs/
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.iml
+
+# Test/coverage/type-check caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+
+# OS files
+.DS_Store
+Thumbs.db

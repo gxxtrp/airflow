@@ -1,0 +1,6 @@
+{
+    "ALLERGY": 0,
+    "COLD": 1,
+    "COVID": 2,
+    "FLU": 3
+}
