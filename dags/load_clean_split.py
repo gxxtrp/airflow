@@ -5,8 +5,8 @@ import pendulum
 
 # Airflow Imports
 from airflow.models.dag import DAG
-from airflow.operators.bash import BashOperator # type: ignore
-from airflow.operators.python import PythonOperator # type: ignore
+from airflow.providers.standard.operators.bash import BashOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from airflow.models.taskinstance import TaskInstance
 
 # Standard Python Imports
@@ -22,13 +22,11 @@ from src.data_pipeline.load import load_data as load_data_module
 logging.basicConfig(level=logging.INFO)
 
 # --- 1. CONFIGURATION (Constants for paths and XCom keys) ---
-DATA_FILE_NAME = 'raw_data.csv' # File name passed to extract
 XCOM_KEY_PATH = 'data_file_path' # Unique XCom key for the file location
 TEMP_DIR = '/tmp/airflow_data' # Shared temp location on the worker file system
-FINAL_PROCESSED_PATH = os.path.join("data", "processed")
 
 # --- 2. EXTRACT WRAPPER (Handles path setup and XCom push) ---
-def airflow_extract_data(ti: TaskInstance | None = None):
+def airflow_extract_data(ti: TaskInstance | None = None, **context):
     """
     Airflow wrapper: Handles paths, calls core extraction logic, and pushes 
     the temporary file path to XCom instead of the entire DataFrame.
@@ -39,7 +37,7 @@ def airflow_extract_data(ti: TaskInstance | None = None):
     
     # The module function expects the file name or path.
     # We'll use the core function from the user's files and hardcode the path logic here
-    df = extract_data_module(DATA_FILE_NAME)
+    df = extract_data_module(context['dag_run'].conf.get("dataset_name/file_name"))
 
     # 2. Robust XCom Handling: Save the DataFrame to a temporary file
     if df.empty:
@@ -83,7 +81,7 @@ def airflow_transform_data(ti: TaskInstance):
 
 
 # --- 4. LOAD WRAPPER (Handles XCom pull and calls core load logic) ---
-def airflow_load_data(ti: TaskInstance):
+def airflow_load_data(ti: TaskInstance, **context):
     """
     Airflow wrapper: Pulls transformed data path, loads data, and calls core load logic.
     """
@@ -99,6 +97,8 @@ def airflow_load_data(ti: TaskInstance):
     
     # 3. CALL CORE LOGIC (The core load function handles saving the data permanently)
     # The load function expects the data tuple and the final path
+    _temp_path = context['dag_run'].conf.get("dataset_name/file_name").split('/') # get dataset folder name
+    FINAL_PROCESSED_PATH = os.path.join("data", _temp_path[0],"processed")
     load_data_module(loaded_data, os.path.abspath(FINAL_PROCESSED_PATH)) # type: ignore
     logging.info(f"--- Load Task completed (Saved to {FINAL_PROCESSED_PATH}) ---")
 
@@ -119,7 +119,6 @@ with DAG(
     dag_id='project-load_clean_split',
     default_args=default_args,
     description='load data, clean, encode, and split into train/test sets',
-    schedule="0 9 * * *",
     start_date=pendulum.datetime(2024, 1, 1, tz="UTC"),
     catchup=False,
     tags=['project', 'etl'],
@@ -128,7 +127,7 @@ with DAG(
     # Task 1: Setup
     setup_task = BashOperator(
         task_id='setup_environment',
-        bash_command=f'echo "Starting robust ETL pipeline"; mkdir -p {TEMP_DIR}',
+        bash_command=f'echo "Starting ETL pipeline"; mkdir -p {TEMP_DIR}',
     )
 
     # Task 2: Extract (Pushes file path)

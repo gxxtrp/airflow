@@ -1,5 +1,3 @@
-# Ignore everything by default
-
 # Allow directories so negated patterns can work
 !*/
 # Keep .gitignore itself
